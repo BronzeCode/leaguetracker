@@ -16,11 +16,11 @@ if (empty($api_key)) {
 // === LISTA DE SUMMONERS === //
 // puedes agregar cuantos quieras:
 $summoners = [
-    ['nombre' => 'Stinson', 'tag' => 'Lan', 'region' => 'la1'],
-    ['nombre' => 'PattynkRiv', 'tag' => 'Lan', 'region' => 'la1'],
-    ['nombre' => 'VectorWar', 'tag' => 'Lan', 'region' => 'la1'],
-    ['nombre' => 'moneda100', 'tag' => 'Lan', 'region' => 'la1'],
-    ['nombre' => 'fhomero', 'tag' => 'Lan', 'region' => 'la1'],
+    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
+    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
+    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
+    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
+    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
 ];
 
 // --- CONEXIÓN --- //
@@ -100,11 +100,6 @@ foreach ($summoners as $s) {
     // Pequeña pausa para evitar límite de rate
     sleep(1);
 }
-
-echo '<hr><p><a href="getdata_all.php" style="
-    display:inline-block;padding:10px 20px;background:#38bdf8;
-    color:#0f172a;border-radius:8px;text-decoration:none;font-weight:bold;
-">📊 Ver datos completos</a></p>';
 
 $mysqli->close();
 ?>
