@@ -4,13 +4,15 @@
       "fecha": "2025-11-01",
       "lp": 60,
       "tier": "GOLD",
-      "division": "II"
+      "division": "II",
+      "grupo": "Group1"
     },
     {
       "fecha": "2025-11-05",
       "lp": 75,
       "tier": "GOLD",
-      "division": "I"
+      "division": "I",
+      "grupo": "Group1"
     }
   ],
   "PattynkRiv": [
@@ -18,13 +20,15 @@
       "fecha": "2025-11-01",
       "lp": 12,
       "tier": "SILVER",
-      "division": "I"
+      "division": "I",
+      "grupo": "Group1"
     },
     {
       "fecha": "2025-11-05",
       "lp": 44,
       "tier": "GOLD",
-      "division": "IV"
+      "division": "IV",
+      "grupo": "Group1"
     }
   ],
   "VectorWar": [
@@ -32,13 +36,15 @@
       "fecha": "2025-11-01",
       "lp": 88,
       "tier": "PLATINUM",
-      "division": "IV"
+      "division": "IV",
+      "grupo": "Group1"
     },
     {
       "fecha": "2025-11-05",
       "lp": 100,
       "tier": "PLATINUM",
-      "division": "III"
+      "division": "III",
+      "grupo": "Group1"
     }
   ],
   "moneda100": [
@@ -46,13 +52,15 @@
       "fecha": "2025-11-01",
       "lp": 25,
       "tier": "SILVER",
-      "division": "II"
+      "division": "II",
+      "grupo": "Group1"
     },
     {
       "fecha": "2025-11-05",
       "lp": 41,
       "tier": "SILVER",
-      "division": "I"
+      "division": "I",
+      "grupo": "Group1"
     }
   ],
   "fhomero": [
@@ -60,13 +68,15 @@
       "fecha": "2025-11-01",
       "lp": 10,
       "tier": "BRONZE",
-      "division": "I"
+      "division": "I",
+      "grupo": "Group1"
     },
     {
       "fecha": "2025-11-05",
       "lp": 40,
       "tier": "SILVER",
-      "division": "IV"
+      "division": "IV",
+      "grupo": "Group1"
     }
   ]
 }
