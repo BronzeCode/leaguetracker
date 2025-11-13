@@ -16,11 +16,8 @@ if (empty($api_key)) {
 // === LISTA DE SUMMONERS === //
 // puedes agregar cuantos quieras:
 $summoners = [
-    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
-    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
-    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
-    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
-    ['nombre' => 'Summoner', 'tag' => 'tag', 'region' => 'Na'],
+    ['nombre' => 'Stinson', 'tag' => 'Lan', 'region' => 'la1', 'grupo'=>'Group2'],
+
 ];
 
 // --- CONEXIÓN --- //
@@ -40,6 +37,17 @@ function riot_api_request($url, $api_key) {
     return json_decode($result, true);
 }
 
+// === FUNCIÓN PARA OBTENER ID DE GRUPO POR NOMBRE === //
+function obtenerGrupoId($conn, $nombreGrupo) {
+    $stmt = $conn->prepare("SELECT id FROM grupos WHERE nombre = ?");
+    $stmt->bind_param("s", $nombreGrupo);
+    $stmt->execute();
+    $stmt->bind_result($grupoId);
+    $stmt->fetch();
+    $stmt->close();
+    return $grupoId ?? null; // Retorna null si no existe
+}
+
 $fecha = date('Y-m-d');
 
 echo "<h2>Actualizando Summoners...</h2>";
@@ -47,7 +55,7 @@ echo "<h2>Actualizando Summoners...</h2>";
 foreach ($summoners as $s) {
     $jugador = $s['nombre'];
     $tagname = $s['tag'];
-
+      $s['grupo_id'] = obtenerGrupoId($mysqli, $s['grupo']);
     echo "<h3>🔍 Consultando $jugador#$tagname...</h3>";
 
     // 1️⃣ Obtener PUUID
@@ -76,18 +84,19 @@ foreach ($summoners as $s) {
     // 3️⃣ Guardar en BD
     if ($solo) {
         $stmt = $mysqli->prepare("
-            INSERT INTO rank_history (fecha, jugador, tier, division, lp, wins, losses)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO rank_history (fecha, jugador, tier, division, lp, wins, losses,grupo_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?,?)
         ");
         $stmt->bind_param(
-            "ssssiii",
+            "ssssiiii",
             $fecha,
             $jugador,
             $solo['tier'],
             $solo['rank'],
             $solo['leaguePoints'],
             $solo['wins'],
-            $solo['losses']
+            $solo['losses'],
+            $s['grupo_id']
         );
         $stmt->execute();
         $stmt->close();

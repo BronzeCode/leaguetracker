@@ -17,9 +17,10 @@ if ($conn->connect_error) {
 
 // --- CONSULTA DE DATOS --- //
 $query = "
-    SELECT fecha, jugador, lp, tier, division
-    FROM rank_history
-    ORDER BY fecha ASC
+    SELECT r.fecha, r.jugador, r.lp, r.tier, r.division, g.nombre AS grupo
+    FROM rank_history r
+    LEFT JOIN grupos g ON r.grupo_id = g.id
+    ORDER BY r.fecha ASC
 ";
 $result = $conn->query($query);
 
@@ -29,7 +30,8 @@ while ($row = $result->fetch_assoc()) {
         'fecha' => $row['fecha'],
         'lp' => (int)$row['lp'],
         'tier' => $row['tier'],
-        'division' => $row['division']
+        'division' => $row['division'],
+        'grupo' => $row['grupo']
     ];
 }
 $conn->close();
@@ -49,6 +51,8 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>League Rank Tracker + Predicción</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
     <style>
         #tablaPosiciones table tr:nth-child(2) { background-color: rgba(255, 215, 0, 0.1); } /* 🥇 */
         #tablaPosiciones table tr:nth-child(3) { background-color: rgba(192, 192, 192, 0.1); } /* 🥈 */
@@ -117,12 +121,16 @@ $conn->close();
 .footer-riot strong {
   color: #f1f5f9;
 }
+        #grupoFiltro { padding: 10px; border-radius: 8px; background: #1e293b; color: #f1f5f9; border: 1px solid #334155; margin-top: 10px; }
+
     </style>
 </head>
 <body>
     <h1>League Rank Tracker</h1>
     <p>Comparativo diario de progreso + predicción de tendencia</p>
-
+    <select id="grupoFiltro">
+  <option value="todos">Todos los grupos</option>
+</select>
     <canvas id="rankChart"></canvas>
 
     <div id="tablaPosiciones"></div>
@@ -270,11 +278,12 @@ const predictionDatasets = jugadores.map((jugador, index) => {
         pointRadius: 0
     };
 });
+let chartInstance = null;
 
 // === Crear Chart ===
 const allDatasets = [...datasets, ...predictionDatasets];
 
-new Chart(document.getElementById('rankChart'), {
+chartInstance = new Chart(document.getElementById('rankChart'), {
     type: 'line',
     data: { datasets: allDatasets },
     options: {
@@ -302,11 +311,11 @@ new Chart(document.getElementById('rankChart'), {
                 }
             }
         },
-        scales: {
-            x: { type: 'category', ticks: { color: '#f1f5f9' } },
-            y: { ticks: { color: '#f1f5f9' } }
+            scales: {
+                x: { type: 'time', ticks: { color: '#f1f5f9' } },
+                y: { ticks: { color: '#f1f5f9' } }
+            }
         }
-    }
 });
 
 // === Mostrar predicciones en texto ===
@@ -328,6 +337,82 @@ predicciones.sort((a, b) => b.pred - a.pred);
 predicciones.forEach(({ jugador, pred, delta }) => {
   predDiv.innerHTML += `<p><strong>${jugador}</strong>: ${pred.toFixed(2)} puntos estimados (${delta})</p>`;
 });
+
+/** Filtros **/
+//const data = <?php echo json_encode($data); ?>;
+// === DIBUJAR GRÁFICO ===
+function renderChart(jugadoresFiltrados){
+    const datasets=[]; const predDatasets=[];
+    jugadoresFiltrados.forEach((jugador,i)=>{
+        const color=colors[i%colors.length];
+        const points=data[jugador].map(item=>{
+            const tierBase=tierValues[item.tier]||0;
+            const divisionBase=divisionValues[item.division]||0;
+            const avance=(tierBase*400)+((divisionBase-1)*100)+item.lp;
+            return {x:item.fecha,y:avance,lp:item.lp,tier:item.tier,division:item.division};
+        });
+        datasets.push({label:jugador,data:points,borderColor:color,backgroundColor:color,fill:false,tension:0.2});
+        const {slope,intercept}=linearRegression(points);
+        const nextIndex=points.length;
+        const predictedValue=slope*nextIndex+intercept;
+        const lastDate=new Date(points[points.length-1].x);
+        lastDate.setDate(lastDate.getDate()+1);
+        const nextDateStr=lastDate.toISOString().split('T')[0];
+        predDatasets.push({
+            label:jugador+" (Predicción)",
+            data:[{x:points[0].x,y:intercept},{x:nextDateStr,y:predictedValue}],
+            borderColor:color,borderDash:[6,6],fill:false,tension:0.2,pointRadius:0
+        });
+    });
+
+    const ctx=document.getElementById('rankChart').getContext('2d');
+    if(chartInstance) chartInstance.destroy();
+    chartInstance=new Chart(ctx,{
+        type:'line',
+        data:{datasets:[...datasets,...predDatasets]},
+        options:{
+            responsive:true,
+            parsing:{xAxisKey:'x',yAxisKey:'y'},
+            plugins:{
+                legend:{labels:{color:'#f1f5f9'}},
+                title:{display:true,text:'Evolución y predicción de progreso (LP + Tier)',color:'#38bdf8'}
+            },
+ scales: {
+                x: { type: 'time', ticks: { color: '#f1f5f9' } },
+                y: { ticks: { color: '#f1f5f9' } }
+            }        }
+    });
+}
+// Extraer los grupos únicos
+const grupos = [...new Set(Object.values(data)
+  .flatMap(rows => rows.map(r => r.grupo)))];
+
+// Insertar en el selector
+const select = document.getElementById("grupoFiltro");
+grupos.forEach(grupo => {
+  const opt = document.createElement("option");
+  opt.value = grupo;
+  opt.textContent = grupo;
+  select.appendChild(opt);
+});
+
+select.addEventListener("change", () => {
+  const grupoSeleccionado = select.value;
+  
+  // Filtrar jugadores por grupo
+  const jugadoresFiltrados = Object.keys(data).filter(jugador =>
+    grupoSeleccionado === "todos" ||
+    data[jugador][0].grupo === grupoSeleccionado
+  );
+
+  // Aquí vuelves a dibujar la gráfica y la tabla usando solo `jugadoresFiltrados`
+  renderChart(jugadoresFiltrados);
+  //renderTabla(jugadoresFiltrados);
+});
+
+
+/** Filtros **/
+
     </script>
 
      <h2>Historial detallado</h2>
