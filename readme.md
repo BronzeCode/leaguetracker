@@ -40,7 +40,8 @@ Esto levantará automáticamente:
 Si tienes un archivo de base de datos (por ejemplo `db.sql`), puedes cargarlo con:
 
 ```bash
-ddev import-db --src=db.sql
+ddev import-db --file db/schema.sql
+ddev import-db --file db/seed.sql --no-drop
 ```
 
 ### 4. Cargar datos de ejemplo (si no hay base de datos)
